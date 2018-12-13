@@ -1,4 +1,6 @@
 module.exports = {
+  jwtSecret: 'jwts3cr3t',
+  jwtSession: { session: false },
   database: process.env.NODE_ENV === 'development' ? 'mock-pl-be' : process.env.DB_NAME,
   username: process.env.NODE_ENV === 'development' ? 'mock-pl-be' : process.env.DB_USERNAME,
   password: process.env.NODE_ENV === 'development' ? 'mock-pl-be' : process.env.DB_PASSWORD,
