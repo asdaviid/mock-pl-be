@@ -5,6 +5,8 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var cors = require('cors');
 
+var dbConfig = require('./config/db.config');
+
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 
@@ -20,6 +22,13 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(cors());
+
+// { force: true } will drop the table(s) if already existing
+dbConfig.sequelize.sync().then(() => {
+  console.log('db connection was successful');
+}).catch(error => {
+  console.error(error);
+});
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
