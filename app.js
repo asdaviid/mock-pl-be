@@ -9,6 +9,7 @@ var dbConfig = require('./config/db.config');
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
+var authRoute = require('./routes/auth.route');
 
 var app = express();
 
@@ -32,6 +33,7 @@ dbConfig.sequelize.sync().then(() => {
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
+app.use('/api/v1/', authRoute);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
