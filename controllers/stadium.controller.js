@@ -1,106 +1,86 @@
-const db = require('../config/db.config');
-const Stadium = db.stadium;
+const Stadium = require('../models/stadium.model');
+const errorHandler = require('../helpers/dbErrorHandler');
 
-const listStadia = async (req, res) => {
-  const stadia = await Stadium.findAll();
+const listStadia = (req, res) => {
+  Stadium.find({}, '-_id -__v').exec((err, stadia) => {
+    if (err) {
+      return res.status(400).json({
+        error: errorHandler.getErrorMessage(err)
+      });
+    };
 
-  return res.status(200)
-    .json(stadia);
+    return res.status(200).json(stadia);
+  });
 }
 
 const createStadium = (req, res) => {
-  const { 
-    name,
-    city,
-    capacity
-   } = req.body;
+  const stadium = new Stadium(req.body);
 
-  Stadium.create({
-    name,
-    city,
-    capacity
-  })
-  .then(stadium => {
+  stadium.save((err, stadium) => {
+    if (err) {
+      return res.status(400).json({
+        error: errorHandler.getErrorMessage(err)
+      });
+    };
+
     res.status(201).json({
-      message: 'stadium added',
-      stadium
-    })
-  })
-  .catch(error => {
-    res.status(400).json({
-      message: 'unable to add stadium'
+      message: 'stadium added'
     });
   });
 }
 
-const updateStadium = async (req, res) => {
-  const stadium = await Stadium.findById(req.params.stadium_id);
+const updateStadium = (req, res) => {
+  const updatedStadium = req.body;
 
-  if (stadium) {
-    const { 
-      name,
-      city,
-      capacity
-     } = req.body;
-  
-    Stadium.update({
-      name,
-      city,
-      capacity
-    }, { where: { id: req.params.stadium_id }})
-    .then(() => {
-      res.status(201).json({
-        message: 'stadium updated'
-      })
-    })
-    .catch(error => {
-      res.status(400).json({
-        message: 'unable to update stadium'
-      });
-    });
-  } else {
-    return res.status(404).json({
-      message: 'stadium not found'
-    });
-  }
-}
-
-const getStadium = async (req, res) => {
-  const stadium = await Stadium.findById(req.params.stadium_id);
-
-  if (stadium) {
-    return res.status(200).json(stadium);
-  } else {
-    return res.status(404).json({
-      message: 'stadium not found'
-    });
-  }
-}
-
-const deleteStadium = async (req, res) => {
-  const stadium = await Stadium.findById(req.params.stadium_id);
-
-  if (stadium) {
-    Stadium.destroy({
-      where: {
-        id: req.params.stadium_id
-      }
-    })
-    .then(() => {
-      return res.status(200).json({
-        message: 'stadium deleted'
-      });
-    })
-    .catch(() => {
+  Stadium.findOneAndUpdate({
+    _id: req.params.stadium_id
+  }, { $set: updatedStadium }, (err, stadium) => {
+    if (err) {
       return res.status(400).json({
-        message: 'stadium could not be deleted'
+        error: errorHandler.getErrorMessage(err)
       });
+    };
+
+    if (stadium) {
+      return res.status(200).json({
+        message: 'stadium updated.'
+      });
+    } else {
+      return res.status(404).json({
+        message: 'stadium not found.'
+      });
+    }
+  });
+}
+
+const getStadium = (req, res) => {
+  Stadium
+    .findById(req.params.stadium_id, '-_id -__v')
+    .exec((err, stadium) => {
+      if (err) {
+        return res.status(400).json({
+          error: errorHandler.getErrorMessage(err)
+        });
+      }
+
+      return res.status(200).json(stadium);
     });
-  } else {
-    return res.status(404).json({
-      message: 'stadium not found'
+}
+
+const deleteStadium = (req, res) => {
+  Stadium.findOneAndDelete({
+    _id: req.params.stadium_id
+  }, (err) => {
+    if (err) {
+      return res.status(400).json({
+        error: errorHandler.getErrorMessage(err)
+      });
+    };
+    
+    return res.status(200).json({
+      message: 'stadium deleted.'
     });
-  }
+  });
 }
 
 module.exports = {

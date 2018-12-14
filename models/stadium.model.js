@@ -1,9 +1,10 @@
-module.exports = (sequelize, Sequelize) => {
-  const Stadium = sequelize.define('stadium', {
-    name: Sequelize.STRING,
-    city: Sequelize.STRING,
-    capacity: Sequelize.INTEGER
-  });
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 
-  return Stadium;
-}
+const StadiumSchema = new Schema({
+  name: String,
+  city: String,
+  capacity: String
+});
+
+module.exports = mongoose.model('Stadium', StadiumSchema);

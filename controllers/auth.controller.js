@@ -1,20 +1,18 @@
 const bcryptjs = require('bcryptjs');
 const jwt = require('jwt-simple');
 const { jwtSecret } = require('../config/app.config');
-const db = require('../config/db.config');
-const User = db.user;
+const User = require('../models/user.model');
 
 const register = (req, res) => {
   const { firstname, lastname, username, email, password, role } = req.body;
 
-  const user = { firstname, lastname, username, email, password, role };
+  const user = new User({ firstname, lastname, username, email, password, role });
 
   bcryptjs.genSalt(10, (err, salt) => {
     bcryptjs.hash(user.password, salt, (error, hash) => {
       user.password = hash;
 
-      User
-        .build(user)
+      user
         .save()
         .then(createdUser => {
           return res.status(201).json({
@@ -35,9 +33,7 @@ const login = async (req, res) => {
   const { email, password } = req.body;
 
   const user = await User.findOne({
-    where: {
-      email: email
-    }
+    email: email
   });
 
   if (user) {

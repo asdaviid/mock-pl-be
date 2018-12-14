@@ -1,39 +1,34 @@
 const bcryptjs = require('bcryptjs');
+const mongoose = require('mongoose');
 
-module.exports = (sequelize, Sequelize) => {
-  const User = sequelize.define('user', {
-    firstname: {
-      type: Sequelize.STRING,
-      allowNull: false,
-    },
-    lastname: {
-      type: Sequelize.STRING,
-      allowNull: false,
-    },
-    username: {
-      type: Sequelize.STRING,
-      allowNull: false,
-    },
-    email: {
-      type: Sequelize.STRING,
-      unique: true,
-      allowNull: false
-    },
-    password: {
-      type: Sequelize.STRING,
-      allowNull: false
-    },
-    role: {
-      type: Sequelize.STRING
-    }
+const Schema = mongoose.Schema;
+
+const UserSchema = new Schema({
+  firstname: {
+    type: String
+  },
+  lastname: {
+    type: String
+  },
+  username: {
+    type: String
+  },
+  email: {
+    type: String
+  },
+  password: {
+    type: String
+  },
+  role: {
+    type: String
+  }
+});
+
+module.exports = mongoose.model('User', UserSchema);
+
+module.exports.comparePassword = (candidatePassword, hash, callback) => {
+  bcryptjs.compare(candidatePassword, hash, (err, isMatch) => {
+    if (err) throw err;
+    callback(null, isMatch);
   });
-
-  User.comparePassword = (candidatePassword, hash, callback) => {
-    bcryptjs.compare(candidatePassword, hash, (err, isMatch) => {
-      if (err) throw err;
-      callback(null, isMatch);
-    });
-  };
-
-  return User;
 };

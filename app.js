@@ -5,10 +5,9 @@ const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const cors = require('cors');
 
-const dbConfig = require('./config/db.config');
+const mongoose = require('mongoose');
+const config = require('./config/app.config');
 
-const indexRouter = require('./routes/index');
-const usersRouter = require('./routes/users');
 const authRoute = require('./routes/auth.route');
 const teamRoute = require('./routes/team.route');
 const stadiumRoute = require('./routes/stadium.route');
@@ -26,15 +25,17 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(cors());
 
-// { force: true } will drop the table(s) if already existing
-dbConfig.sequelize.sync().then(() => {
-  console.log('db connection was successful');
-}).catch(error => {
-  console.error(error);
+mongoose.Promise = global.Promise;
+mongoose.connect(config.mongoUri);
+
+mongoose.connection.once('open', () => {
+  console.log('mongodb connection successful');
 });
 
-app.use('/', indexRouter);
-app.use('/users', usersRouter);
+mongoose.connection.on('error', () => {
+  throw new Error(`unable to connect to database: ${config.mongoUri}`)
+});
+
 app.use('/api/v1/', authRoute);
 app.use('/api/v1/', teamRoute);
 app.use('/api/v1/', stadiumRoute);

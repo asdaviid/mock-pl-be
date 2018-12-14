@@ -1,120 +1,88 @@
-const db = require('../config/db.config');
-const Team = db.team;
+const Team = require('../models/team.model');
+const errorHandler = require('../helpers/dbErrorHandler');
 
-const listTeams = async (req, res) => {
-  const teams = await Team.findAll();
+const listTeams = (req, res) => {
+  Team.find({}, '-_id -__v').exec((err, teams) => {
+    if (err) {
+      return res.status(400).json({
+        error: errorHandler.getErrorMessage(err)
+      });
+    };
 
-  return res.status(200)
-    .json(teams);
+    return res.status(200).json(teams);
+  });
 }
 
 const createTeam = (req, res) => {
-  const { 
-    name,
-    website,
-    founded,
-    country,
-    home_stadium,
-    home_stadium_capacity
-   } = req.body;
+  const team = new Team(req.body);
 
-  Team.create({
-    name,
-    website,
-    founded,
-    country,
-    home_stadium,
-    home_stadium_capacity
-  })
-  .then(team => {
+  team.save((err, team) => {
+    if (err) {
+      return res.status(400).json({
+        error: errorHandler.getErrorMessage(err)
+      });
+    };
+
     res.status(201).json({
       message: 'team added',
       team
-    })
-  })
-  .catch(error => {
-    res.status(400).json({
-      message: 'unable to add team'
     });
   });
-
-  return res.status(200)
 }
 
 const updateTeam = async (req, res) => {
-  const team = await Team.findById(req.params.team_id);
+  const updatedTeam = req.body;
 
-  if (team) {
-    const { 
-      name,
-      website,
-      founded,
-      country,
-      home_stadium,
-      home_stadium_capacity
-     } = req.body;
-  
-    Team.update({
-      name,
-      website,
-      founded,
-      country,
-      home_stadium,
-      home_stadium_capacity
-    }, { where: { id: req.params.team_id }})
-    .then(() => {
-      res.status(201).json({
-        message: 'team updated'
-      });
-    })
-    .catch(error => {
-      res.status(400).json({
-        message: 'unable to update team'
-      });
-    });
-  } else {
-    return res.status(404).json({
-      message: 'team not found'
-    });
-  }
-}
-
-const getTeam = async (req, res) => {
-  const team = await Team.findById(req.params.team_id);
-
-  if (team) {
-    return res.status(200).json(team);
-  } else {
-    return res.status(404).json({
-      message: 'team not found'
-    });
-  }
-}
-
-const deleteTeam = async (req, res) => {
-  const team = await Team.findById(req.params.team_id);
-
-  if (team) {
-    Team.destroy({
-      where: {
-        id: req.params.team_id
-      }
-    })
-    .then(() => {
-      return res.status(200).json({
-        message: 'team deleted'
-      });
-    })
-    .catch(() => {
+  Team.findOneAndUpdate({
+    _id: req.params.team_id
+  }, { $set: updatedTeam }, (err, team) => {
+    if (err) {
       return res.status(400).json({
-        message: 'team could not be deleted'
+        error: errorHandler.getErrorMessage(err)
       });
+    };
+
+    if (team) {
+      return res.status(200).json({
+        message: 'team updated.'
+      });
+    } else {
+      return res.status(404).json({
+        message: 'team not found.'
+      });
+    }
+  });
+}
+
+const getTeam = (req, res) => {
+  Team
+    .findById(req.params.team_id, '-_id -__v')
+    .populate('home_stadium', '-_id -__v')
+    .exec((err, team) => {
+      if (err) {
+        return res.status(400).json({
+          error: errorHandler.getErrorMessage(err)
+        });
+      }
+
+      return res.status(200).json(team);
     });
-  } else {
-    return res.status(404).json({
-      message: 'team not found'
+}
+
+const deleteTeam = (req, res) => {
+  Team.findOneAndDelete({
+    _id: req.params.team_id
+  }, (err) => {
+    if (err) {
+      return res.status(400).json({
+        error: errorHandler.getErrorMessage(err)
+      });
+    };
+    
+    return res.status(200).json({
+      message: 'team deleted.'
     });
-  }
+  });
 }
 
 module.exports = {

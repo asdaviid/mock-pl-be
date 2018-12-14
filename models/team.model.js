@@ -1,10 +1,15 @@
-module.exports = (sequelize, Sequelize) => {
-  const Team = sequelize.define('team', {
-    name: Sequelize.STRING,
-    website: Sequelize.STRING,
-    founded: Sequelize.STRING,
-    country: Sequelize.STRING
-  });
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 
-  return Team;
-}
+const TeamSchema = new Schema({
+  name: String,
+  website: String,
+  founded: String,
+  country: String,
+  home_stadium: {
+    type: Schema.Types.ObjectId,
+    ref: 'Stadium'
+  }
+});
+
+module.exports = mongoose.model('Team', TeamSchema);
