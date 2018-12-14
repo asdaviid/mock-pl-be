@@ -11,6 +11,7 @@ const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
 const authRoute = require('./routes/auth.route');
 const teamRoute = require('./routes/team.route');
+const stadiumRoute = require('./routes/stadium.route');
 
 const app = express();
 
@@ -36,6 +37,7 @@ app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/api/v1/', authRoute);
 app.use('/api/v1/', teamRoute);
+app.use('/api/v1/', stadiumRoute);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
