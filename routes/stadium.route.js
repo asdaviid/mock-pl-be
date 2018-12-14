@@ -1,14 +1,16 @@
 const express = require('express');
 const stadiumCtrl = require('../controllers/stadium.controller');
+const auth = require('../auth')();
 
 const router = express.Router();
 
 router.route('/stadia')
-  .get(stadiumCtrl.listStadia) // GET /stadia
-  .post(stadiumCtrl.createStadium); // POST /stadia
+  .get(auth.authenticate(), stadiumCtrl.listStadia)
+  .post(auth.authenticate(), stadiumCtrl.createStadium);
 
 router.route('/stadia/:stadium_id')
-  .get(stadiumCtrl.getStadium) // GET /stadia/1
-  .put(stadiumCtrl.updateStadium) // PUT /stadia/1
-  .delete(stadiumCtrl.deleteStadium) // DELETE /stadia/1
+  .get(auth.authenticate(), stadiumCtrl.getStadium)
+  .put(auth.authenticate(), stadiumCtrl.updateStadium)
+  .delete(auth.authenticate(), stadiumCtrl.deleteStadium);
+  
 module.exports = router;

@@ -15,6 +15,8 @@ const fixtureRoute = require('./routes/fixture.route');
 
 const app = express();
 
+const auth = require('./auth')();
+
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
