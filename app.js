@@ -21,6 +21,7 @@ const auth = require('./auth')();
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
 
+auth.initialize();
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));

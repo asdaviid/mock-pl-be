@@ -13,7 +13,7 @@ const params = {
 
 module.exports = () => {
   const strategy = new Strategy(params, (payload, done) => {
-    User.find({ email: payload.user.email }, (err, user) => {
+    User.findOne({ email: payload.user.email }, (err, user) => {
       if (!user) {
         return done(new Error('user not found'), null);
       } else {
