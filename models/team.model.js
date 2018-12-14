@@ -10,6 +10,6 @@ const TeamSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: 'Stadium'
   }
-});
+}, { timestamps: true });
 
 module.exports = mongoose.model('Team', TeamSchema);
