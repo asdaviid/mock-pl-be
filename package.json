@@ -15,6 +15,7 @@
     "jade": "~1.11.0",
     "joi": "^14.3.0",
     "jwt-simple": "^0.5.5",
+    "memory-cache": "^0.2.0",
     "mongoose": "^5.3.16",
     "morgan": "~1.9.0",
     "mysql2": "^1.6.4",
