@@ -9,7 +9,7 @@ module.exports.cache = (duration) => {
     } else {
       res.sendResponse = res.send;
       res.send = (body) => {
-        mcache.put(key, body, duration * 60 * 60 * 1000);
+        mcache.put(key, body, duration * 1000);
         res.sendResponse(body);
       }
       next();
