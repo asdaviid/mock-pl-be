@@ -11,6 +11,7 @@ const config = require('./config/app.config');
 const authRoute = require('./routes/auth.route');
 const teamRoute = require('./routes/team.route');
 const stadiumRoute = require('./routes/stadium.route');
+const fixtureRoute = require('./routes/fixture.route');
 
 const app = express();
 
@@ -39,6 +40,7 @@ mongoose.connection.on('error', () => {
 app.use('/api/v1/', authRoute);
 app.use('/api/v1/', teamRoute);
 app.use('/api/v1/', stadiumRoute);
+app.use('/api/v1/', fixtureRoute);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
