@@ -34,7 +34,7 @@ const createTeam = (req, res) => {
   })
   .catch(error => {
     res.status(400).json({
-      lmessage: 'unable to add team'
+      message: 'unable to add team'
     });
   });
 
@@ -64,9 +64,8 @@ const updateTeam = async (req, res) => {
     }, { where: { id: req.params.team_id }})
     .then(() => {
       res.status(201).json({
-        message: 'team updated',
-        team
-      })
+        message: 'team updated'
+      });
     })
     .catch(error => {
       res.status(400).json({

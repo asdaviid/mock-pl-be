@@ -3,9 +3,7 @@ module.exports = (sequelize, Sequelize) => {
     name: Sequelize.STRING,
     website: Sequelize.STRING,
     founded: Sequelize.STRING,
-    country: Sequelize.STRING,
-    home_stadium: Sequelize.STRING,
-    home_stadium_capacity: Sequelize.INTEGER
+    country: Sequelize.STRING
   });
 
   return Team;
