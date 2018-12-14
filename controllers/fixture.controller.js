@@ -1,5 +1,6 @@
 const Fixture = require('../models/fixture.model');
 const errorHandler = require('../helpers/dbErrorHandler');
+const { createFixtureDataSchema, updateFixtureDataSchema } = require('../validators/fixture.validator');
 
 const listFixtures = (req, res) => {
   Fixture.find({}, '-__v -createdAt -updatedAt')
@@ -18,45 +19,67 @@ const listFixtures = (req, res) => {
 }
 
 const createFixture = (req, res) => {
-  const fixture = new Fixture(req.body);
+  createFixtureDataSchema.validate(req.body, { abortEarly: false })
+    .then(() => {
+      const fixture = new Fixture(req.body);
 
-  fixture.save((err, fixture) => {
-    if (err) {
-      return res.status(400).json({
-        error: errorHandler.getErrorMessage(err)
+      fixture.save((err, fixture) => {
+        if (err) {
+          return res.status(400).json({
+            error: errorHandler.getErrorMessage(err)
+          });
+        };
+
+        res.status(201).json({
+          message: 'fixture added'
+        });
       });
-    };
-
-    res.status(201).json({
-      message: 'fixture added'
+    })
+    .catch(validationError => {
+      const errorMessage = validationError
+        .details
+        .map(({message, type}) => ({
+          message: message.replace(/['"]/g, ''),
+          type
+        }));
+      return res.status(400).send(errorMessage);
     });
-  });
 }
 
 const updateFixture = (req, res) => {
-  const newKickoffDateTime = req.body;
+  updateFixtureDataSchema.validate(req.body, { abortEarly: false })
+    .then(() => {
+      const newKickoffDateTime = req.body;
 
-  // return res.status(200).json(newKickoffDateTime);
+      Fixture.findOneAndUpdate({
+        _id: req.params.fixture_id
+      }, { $set: newKickoffDateTime }, (err, fixture) => {
+        if (err) {
+          return res.status(400).json({
+            error: errorHandler.getErrorMessage(err)
+          });
+        };
 
-  Fixture.findOneAndUpdate({
-    _id: req.params.fixture_id
-  }, { $set: newKickoffDateTime }, (err, fixture) => {
-    if (err) {
-      return res.status(400).json({
-        error: errorHandler.getErrorMessage(err)
+        if (fixture) {
+          return res.status(200).json({
+            message: 'fixture updated.'
+          });
+        } else {
+          return res.status(404).json({
+            message: 'fixture not found.'
+          });
+        }
       });
-    };
-
-    if (fixture) {
-      return res.status(200).json({
-        message: 'fixture updated.'
-      });
-    } else {
-      return res.status(404).json({
-        message: 'fixture not found.'
-      });
-    }
-  });
+    })
+    .catch(validationError => {
+      const errorMessage = validationError
+        .details
+        .map(({message, type}) => ({
+          message: message.replace(/['"]/g, ''),
+          type
+        }));
+      return res.status(400).send(errorMessage);
+    });
 }
 
 const getFixture = (req, res) => {

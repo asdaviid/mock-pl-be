@@ -4,17 +4,23 @@ const Schema = mongoose.Schema;
 const FixtureSchema = new Schema({
   home_team: {
     type: Schema.Types.ObjectId,
-    ref: 'Team'
+    ref: 'Team',
+    required: true
   },
   away_team: {
     type: Schema.Types.ObjectId,
-    ref: 'Team'
+    ref: 'Team',
+    required: true
   },
   competition: String,
-  kickoff: Date,
+  kickoff:{
+    type: Date,
+    required: true
+  },
   venue: {
     type: Schema.Types.ObjectId,
-    ref: 'Stadium'
+    ref: 'Stadium',
+    required: true
   }
 }, { timestamps: true });
 

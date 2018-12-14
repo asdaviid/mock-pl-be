@@ -14,13 +14,17 @@ const UserSchema = new Schema({
     type: String
   },
   email: {
-    type: String
+    type: String,
+    required: true
   },
   password: {
-    type: String
+    type: String,
+    required: true
   },
   role: {
-    type: String
+    type: String,
+    required: true,
+    enum: ['admin', 'standard']
   }
 }, { timestamps: true });
 

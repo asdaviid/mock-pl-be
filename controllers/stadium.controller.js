@@ -1,5 +1,6 @@
 const Stadium = require('../models/stadium.model');
 const errorHandler = require('../helpers/dbErrorHandler');
+const { createStadiumDataSchema, updateStadiumDataSchema } = require('../validators/stadium.validator');
 
 const listStadia = (req, res) => {
   Stadium.find({}, '-_id -__v').exec((err, stadia) => {
@@ -14,43 +15,67 @@ const listStadia = (req, res) => {
 }
 
 const createStadium = (req, res) => {
-  const stadium = new Stadium(req.body);
+  createStadiumDataSchema.validate(req.body, { abortEarly: false })
+    .then(() => {
+      const stadium = new Stadium(req.body);
 
-  stadium.save((err, stadium) => {
-    if (err) {
-      return res.status(400).json({
-        error: errorHandler.getErrorMessage(err)
-      });
-    };
+        stadium.save((err, stadium) => {
+          if (err) {
+            return res.status(400).json({
+              error: errorHandler.getErrorMessage(err)
+            });
+          };
 
-    res.status(201).json({
-      message: 'stadium added'
+          res.status(201).json({
+            message: 'stadium added'
+          });
+        });
+    })
+    .catch(validationError => {
+      const errorMessage = validationError
+        .details
+        .map(({message, type}) => ({
+          message: message.replace(/['"]/g, ''),
+          type
+        }));
+      return res.status(400).send(errorMessage);
     });
-  });
 }
 
 const updateStadium = (req, res) => {
-  const updatedStadium = req.body;
+  updateStadiumDataSchema.validate(req.body, { abortEarly: false })
+    .then(() => {
+      const updatedStadium = req.body;
 
-  Stadium.findOneAndUpdate({
-    _id: req.params.stadium_id
-  }, { $set: updatedStadium }, (err, stadium) => {
-    if (err) {
-      return res.status(400).json({
-        error: errorHandler.getErrorMessage(err)
-      });
-    };
+        Stadium.findOneAndUpdate({
+          _id: req.params.stadium_id
+        }, { $set: updatedStadium }, (err, stadium) => {
+          if (err) {
+            return res.status(400).json({
+              error: errorHandler.getErrorMessage(err)
+            });
+          };
 
-    if (stadium) {
-      return res.status(200).json({
-        message: 'stadium updated.'
-      });
-    } else {
-      return res.status(404).json({
-        message: 'stadium not found.'
-      });
-    }
-  });
+          if (stadium) {
+            return res.status(200).json({
+              message: 'stadium updated.'
+            });
+          } else {
+            return res.status(404).json({
+              message: 'stadium not found.'
+            });
+          }
+        });
+    })
+    .catch(validationError => {
+      const errorMessage = validationError
+        .details
+        .map(({message, type}) => ({
+          message: message.replace(/['"]/g, ''),
+          type
+        }));
+      return res.status(400).send(errorMessage);
+    });
 }
 
 const getStadium = (req, res) => {

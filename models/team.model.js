@@ -2,13 +2,14 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const TeamSchema = new Schema({
-  name: String,
-  website: String,
-  founded: String,
-  country: String,
+  name: { type: String, required: true },
+  website: { type: String, required: true },
+  founded: { type: String, required: true },
+  country: { type: String, required: true },
   home_stadium: {
     type: Schema.Types.ObjectId,
-    ref: 'Stadium'
+    ref: 'Stadium',
+    required: true
   }
 }, { timestamps: true });
 
