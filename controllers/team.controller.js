@@ -90,6 +90,12 @@ const getTeam = (req, res) => {
         });
       }
 
+      if (!team) {
+        return res.status(404).json({
+          message: 'team not found.'
+        });
+      }
+
       return res.status(200).json(team);
     });
 }

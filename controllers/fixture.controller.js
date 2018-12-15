@@ -95,6 +95,12 @@ const getFixture = (req, res) => {
         });
       }
 
+      if (!fixture) {
+        return res.status(404).json({
+          message: 'fixture not found.'
+        });
+      }
+      
       return res.status(200).json(fixture);
     });
 }

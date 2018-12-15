@@ -88,6 +88,12 @@ const getStadium = (req, res) => {
         });
       }
 
+      if (!stadium) {
+        return res.status(404).json({
+          message: 'stadium not found.'
+        });
+      }
+
       return res.status(200).json(stadium);
     });
 }
