@@ -3,7 +3,9 @@ const errorHandler = require('../helpers/dbErrorHandler');
 const { createFixtureDataSchema, updateFixtureDataSchema } = require('../validators/team.validator');
 
 const listTeams = (req, res) => {
-  Team.find({}, '-_id -__v').exec((err, teams) => {
+  Team.find({}, '_id name website founded country')
+    .populate('home_stadium', '_id name city capacity')
+    .exec((err, teams) => {
     if (err) {
       return res.status(400).json({
         error: errorHandler.getErrorMessage(err)
@@ -27,8 +29,7 @@ const createTeam = (req, res) => {
           };
 
           res.status(201).json({
-            message: 'team added',
-            team
+            message: 'team added'
           });
         });
     })
@@ -81,8 +82,8 @@ const updateTeam = async (req, res) => {
 
 const getTeam = (req, res) => {
   Team
-    .findById(req.params.team_id, '-_id -__v')
-    .populate('home_stadium', '-_id -__v')
+    .findById(req.params.team_id, '_id name website founded country')
+    .populate('home_stadium', '_id name city capacity')
     .exec((err, team) => {
       if (err) {
         return res.status(400).json({

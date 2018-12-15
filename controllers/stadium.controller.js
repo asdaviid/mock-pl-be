@@ -3,7 +3,7 @@ const errorHandler = require('../helpers/dbErrorHandler');
 const { createStadiumDataSchema, updateStadiumDataSchema } = require('../validators/stadium.validator');
 
 const listStadia = (req, res) => {
-  Stadium.find({}, '-_id -__v').exec((err, stadia) => {
+  Stadium.find({}, '_id name city capacity').exec((err, stadia) => {
     if (err) {
       return res.status(400).json({
         error: errorHandler.getErrorMessage(err)
@@ -80,7 +80,7 @@ const updateStadium = (req, res) => {
 
 const getStadium = (req, res) => {
   Stadium
-    .findById(req.params.stadium_id, '-_id -__v')
+    .findById(req.params.stadium_id, '_id name city capacity')
     .exec((err, stadium) => {
       if (err) {
         return res.status(400).json({

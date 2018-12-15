@@ -11,9 +11,9 @@ const search = (req, res) => {
         "$or": [
           { 'competition': { '$regex': query, '$options': 'i' } }
         ]
-      })
-      .populate('home_team')
-      .populate('away_team')
+      }, '_id competition kickoff venue')
+      .populate('home_team', '_id name website founded country')
+      .populate('away_team', '_id name website founded country')
       .exec((err, fixtures) => {
         if (err) {
           throw err;
@@ -32,7 +32,8 @@ const search = (req, res) => {
           { 'founded': { '$regex': query, '$options': 'i' } },
           { 'country': { '$regex': query, '$options': 'i' } }
         ]
-      })
+      }, '_id name website founded country')
+      .populate('home_stadium', '_id name city capacity')
       .exec((err, teams) => {
         if (err) {
           throw err;
@@ -50,7 +51,7 @@ const search = (req, res) => {
           { 'city': { '$regex': query, '$options': 'i' } },
           { 'capacity': { '$regex': query, '$options': 'i' } }
         ]
-      }).exec((err, stadia) => {
+      }, '_id name city capacity').exec((err, stadia) => {
         if (err) {
           throw err;
         }

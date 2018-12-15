@@ -25,8 +25,7 @@ const register = (req, res) => {
             };
         
             res.status(201).json({
-              message: 'user created',
-              user
+              message: 'user created'
             });
           });
         });
@@ -50,7 +49,7 @@ const login = (req, res) => {
 
       const user = await User.findOne({
         email: email
-      });
+      }, '-__v');
 
       if (user) {
         User.comparePassword(password, user.password, (err, isMatch) => {
@@ -64,9 +63,11 @@ const login = (req, res) => {
               expire: new Date() + 999
             });
 
+            const newUser = Object.assign({}, { id: user._id, firstname: user.firstname, lastname: user.lastname, email: user.email, role: user.role  });
+
             return res.status(200).json({
               message: 'user logged in',
-              user,
+              user: newUser,
               token
             });
           } else {
