@@ -7,6 +7,6 @@ const { cache } = require('../middlewares/utils');
 const router = express.Router();
 
 router.route('/search')
-  .get(auth.authenticate(), searchCtrl.search);
+  .get(auth.authenticate(), cache(1), searchCtrl.search);
 
 module.exports = router;
