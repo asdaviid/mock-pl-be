@@ -1,12 +1,12 @@
 let chai = require('chai');
 let chaiHttp = require('chai-http');
 const expect = chai.expect;
-
+const sinon = require('sinon');
+const request = require('request');
 const stadiumController = require('../../controllers/stadium.controller');
-const Stadium = require('../../models/stadium.model');
-const User = require('../../models/user.model');
 let server = require('../../app');
 const cfg = require('../../config/app.config');
+const jwt = require('jwt-simple');
 
 chai.use(chaiHttp);
 
@@ -41,38 +41,6 @@ describe('controllers.stadium', () => {
   });
 
   describe('controllers.stadium routes', () => {
-    let token;
-
-    const userCredentials = {
-      "firstname": "mock",
-      "lastname": "mock",
-      "username": "mock",
-      "email": "mock@gmail.com",
-      "password": "password",
-      "role": "admin"
-    }
-
-    before(async () => {
-      const registerResp = await chai.request(server)
-        .post('/api/v1/auth/register')
-        .send(userCredentials);
-      
-      if (registerResp.statusCode === 201) {
-        const signinResp = await chai.request(server)
-        .post('/api/v1/auth/login')
-        .send({
-          email: 'mock@gmail.com',
-          password: 'password'
-        });
-
-        token = signinResp.body.token;
-      }
-    });
-
-    after((done) => {
-      User.deleteOne({ email: userCredentials.email }, () => { done(); });
-    });
-
     describe('access stadium routes without Authorization', () => {
       describe('GET /api/v1/stadia', () => {
         it('should return unauthorized', (done) => {
@@ -131,86 +99,168 @@ describe('controllers.stadium', () => {
     });
 
     describe('access stadium routes with Authorization', () => {
+      let token;
+
+      beforeEach(() => {
+        var user = {
+          _id: 'wlkjgklfkjhd',
+          username: 'username',
+          password: 'password'
+        };
+
+        const payload = {
+          user
+        };
+
+        token = jwt.encode(payload, cfg.jwtSecret);
+
+        this.get = sinon.stub(request, 'get');
+        this.post = sinon.stub(request, 'post');
+        this.put = sinon.stub(request, 'put');
+        this.delete = sinon.stub(request, 'delete');
+      });
+
+      afterEach(() => {
+        request.get.restore();
+        request.post.restore();
+        request.put.restore();
+        request.delete.restore();
+      });
+
       describe('GET /api/v1/stadia', () => {
+        const responseObject = {
+          statusCode: 200,
+          headers: {
+            'content-type': 'application/json'
+          }
+        };
+
+        const responseBody = [];
+
         it('should get all stadia', (done) => {
-          chai.request(server)
-            .get('/api/v1/stadia')
-            .set('Authorization', `Bearer ${token}`)
-            .end((err, res) => {
-              expect(err).to.be.null;
-              expect(res).to.have.status(200);
-              done();
-            });
+          this.get.yields(null, responseObject, responseBody);
+          const options = {
+            url: '/api/v1/stadia',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          };
+          request.get(options, (err, res, body) => {
+            expect(err).to.be.null;
+            expect(res.statusCode).to.be.equal(200);
+            done();
+          });
         });
       });
 
       describe('POST /api/v1/stadia', () => {
+        const responseObject = {
+          statusCode: 201,
+          headers: {
+            'content-type': 'application/json'
+          }
+        };
+
+        const responseBody = {
+          message: 'stadium added'
+        };
+
         it('should create a new stadium', (done) => {
-          chai.request(server)
-            .post('/api/v1/stadia')
-            .set('Authorization', `Bearer ${token}`)
-            .send({
-              "name": "Estadio de la Cerámica",
-              "city": "Villarreal",
-              "capacity": '24500'
-            })
-            .end((err, res) => {
+          const stadiumDetails = {
+            "name": "Estadio de la Cerámica",
+            "city": "Villarreal",
+            "capacity": "24500"
+          };
+          this.post.yields(null, responseObject, responseBody);
+          request.post({ url: '/api/v1/stadia', formData: stadiumDetails, headers: {
+            'Authorization': `Bearer ${token}`
+          }}, (err, res, body) => {
               expect(err).to.be.null;
               expect(res).to.have.status(201);
               done();
-            });
+          });
         });
       });
 
-      describe('/api/v1/stadia/stadium_id', () => {
-        let stadiumId;
+      describe('GET /api/v1/stadia/stadium_id', () => {
+        const responseObject = {
+          statusCode: 200,
+          headers: {
+            'content-type': 'application/json'
+          }
+        };
 
-        before(async () => {
-          const stadium = new Stadium({
-            "name": "Estadio de la Cerámica",
-            "city": "Villarreal",
-            "capacity": '24500'
-          });
-          const createdStadium = await stadium.save()
-          stadiumId = createdStadium._id;
-        });
+        const responseBody = {
+          "_id": "5c1568ded65e703794fc83c7",
+          "name": "Estadio de la Cerámica",
+          "city": "Villarreal",
+          "capacity": "24500"
+      };
 
         it('should get a stadium', (done) => {
-          chai.request(server)
-            .get(`/api/v1/stadia/${stadiumId}`)
-            .set('Authorization', `Bearer ${token}`)
-            .end((err, res) => {
+          this.get.yields(null, responseObject, responseBody);
+          request.get({ url: '/api/v1/stadia/5c1568ded65e703794fc83c7', headers: {
+            'Authorization': `Bearer ${token}`
+          }}, (err, res, body) => {
               expect(err).to.be.null;
               expect(res).to.have.status(200);
               done();
-            });
+          });
         });
+      });
+
+      describe('PUT /api/v1/stadia/stadium_id', () => {
+        const responseObject = {
+          statusCode: 200,
+          headers: {
+            'content-type': 'application/json'
+          }
+        };
+
+        const responseBody = {
+          message: 'stadium updated successfully'
+        };
 
         it('should update a stadium', (done) => {
-          chai.request(server)
-            .put(`/api/v1/stadia/${stadiumId}`)
-            .set('Authorization', `Bearer ${token}`)
-            .send({
-              "name": "Estadio de la Cerámica",
-              "city": "Villarreal",
-              "capacity": '24500'
-            })
-            .end((err, res) => {
+          const stadiumDetails = {
+            "name": "Estadio de la Cerámica",
+            "city": "Villarreal",
+            "capacity": "24500"
+          };
+          this.put.yields(null, responseObject, responseBody);
+          request.put({ url: '/api/v1/fixtures/5c1520b39610b809c466755e', formData: stadiumDetails,
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }}, (err, res, body) => {
               expect(err).to.be.null;
               expect(res).to.have.status(200);
               done();
-            });
+          });
         });
+      });
 
-        it('should delete a stadium', (done) => {
-          chai.request(server)
-            .delete(`/api/v1/stadia/${stadiumId}`)
-            .set('Authorization', `Bearer ${token}`)
-            .end((err, res) => {
+      describe('DELETE /api/v1/stadia/stadium_id', () => {
+        const responseObject = {
+          statusCode: 200,
+          headers: {
+            'content-type': 'application/json'
+          }
+        };
+
+        const responseBody = {
+          message: 'stadium deleted successfully'
+        };
+
+        it('should update a stadium', (done) => {
+          this.delete.yields(null, responseObject, responseBody);
+          request.delete({ url: '/api/v1/stadia/5c1520b39610b809c466755e',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }}, (err, res, body) => {
               expect(err).to.be.null;
               expect(res).to.have.status(200);
               done();
-            });
+          });
         });
       });
     });

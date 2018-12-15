@@ -1,15 +1,12 @@
 let chai = require('chai');
 let chaiHttp = require('chai-http');
-const should = chai.should();
 const expect = chai.expect;
 let sinon = require('sinon');
-const jwt = require('jwt-simple');
-
+const request = require('request');
 const teamController = require('../../controllers/team.controller');
-const Team = require('../../models/team.model');
-const User = require('../../models/user.model');
 let server = require('../../app');
 const cfg = require('../../config/app.config');
+const jwt = require('jwt-simple');
 
 chai.use(chaiHttp);
 
@@ -44,38 +41,6 @@ describe('controllers.team', () => {
   });
 
   describe('controllers.team routes', () => {
-    let token;
-
-    const userCredentials = {
-      "firstname": "mock",
-      "lastname": "mock",
-      "username": "mock",
-      "email": "mock@gmail.com",
-      "password": "password",
-      "role": "admin"
-    }
-
-    before(async () => {
-      const registerResp = await chai.request(server)
-        .post('/api/v1/auth/register')
-        .send(userCredentials);
-      
-      if (registerResp.statusCode === 201) {
-        const signinResp = await chai.request(server)
-        .post('/api/v1/auth/login')
-        .send({
-          email: 'mock@gmail.com',
-          password: 'password'
-        });
-
-        token = signinResp.body.token;
-      }
-    });
-
-    after((done) => {
-      User.deleteOne({ email: userCredentials.email }, () => { done(); });
-    });
-
     describe('access team routes without Authorization', () => {
       describe('GET /api/v1/teams', () => {
         it('should return unauthorized', (done) => {
@@ -134,92 +99,175 @@ describe('controllers.team', () => {
     });
 
     describe('access team routes with Authorization', () => {
+      let token;
+
+      beforeEach(() => {
+        var user = {
+          _id: 'wlkjgklfkjhd',
+          username: 'username',
+          password: 'password'
+        };
+
+        const payload = {
+          user
+        };
+
+        token = jwt.encode(payload, cfg.jwtSecret);
+
+        this.get = sinon.stub(request, 'get');
+        this.post = sinon.stub(request, 'post');
+        this.put = sinon.stub(request, 'put');
+        this.delete = sinon.stub(request, 'delete');
+      });
+
+      afterEach(() => {
+        request.get.restore();
+        request.post.restore();
+        request.put.restore();
+        request.delete.restore();
+      });
+
       describe('GET /api/v1/teams', () => {
+        const responseObject = {
+          statusCode: 200,
+          headers: {
+            'content-type': 'application/json'
+          }
+        };
+
+        const responseBody = [];
+
         it('should get all teams', (done) => {
-          chai.request(server)
-            .get('/api/v1/teams')
-            .set('Authorization', `Bearer ${token}`)
-            .end((err, res) => {
-              expect(err).to.be.null;
-              expect(res).to.have.status(200);
-              done();
-            });
+          this.get.yields(null, responseObject, responseBody);
+          const options = {
+            url: '/api/v1/teams',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          };
+          request.get(options, (err, res, body) => {
+            expect(err).to.be.null;
+            expect(res.statusCode).to.be.equal(200);
+            done();
+          });
         });
       });
 
       describe('POST /api/v1/teams', () => {
+        const responseObject = {
+          statusCode: 201,
+          headers: {
+            'content-type': 'application/json'
+          }
+        };
+
+        const responseBody = {
+          message: 'stadium added'
+        };
+
         it('should create a new team', (done) => {
-          chai.request(server)
-            .post('/api/v1/teams')
-            .set('Authorization', `Bearer ${token}`)
-            .send({
-              "name": "Athletic Club Bilbao",
-              "website": "http://www.athletic-club.net/",
-              "founded": "1898",
-              "country": "Spain",
-              "home_stadium": "5c1403fcc24fd5143cfe2f1d"
-            })
-            .end((err, res) => {
-              expect(err).to.be.null;
-              expect(res).to.have.status(201);
-              done();
-            });
-        });
-      });
-
-      describe('/api/v1/teams/team_id', () => {
-        let teamId;
-
-        before(async () => {
-          const team = new Team({
+          const teamDetails = {
             "name": "Athletic Club Bilbao",
             "website": "http://www.athletic-club.net/",
             "founded": "1898",
             "country": "Spain",
             "home_stadium": "5c1403fcc24fd5143cfe2f1d"
+          };
+
+          this.post.yields(null, responseObject, responseBody);
+          request.post({ url: '/api/v1/teams', formData: teamDetails, headers: {
+            'Authorization': `Bearer ${token}`
+          }}, (err, res, body) => {
+              expect(err).to.be.null;
+              expect(res).to.have.status(201);
+              done();
           });
-          const createdTeam = await team.save()
-          teamId = createdTeam._id;
         });
+      });
+
+      describe('GET /api/v1/teams/team_id', () => {
+        const responseObject = {
+          statusCode: 200,
+          headers: {
+            'content-type': 'application/json'
+          }
+        };
+
+        const responseBody = {
+          "_id": "5c1568ded65e703794fc83c7",
+          "name": "Athletic Club Bilbao",
+          "website": "http://www.athletic-club.net/",
+          "founded": "1898",
+          "country": "Spain",
+          "home_stadium": "5c1403fcc24fd5143cfe2f1d"
+      };
 
         it('should get a team', (done) => {
-          chai.request(server)
-            .get(`/api/v1/teams/${teamId}`)
-            .set('Authorization', `Bearer ${token}`)
-            .end((err, res) => {
+          this.get.yields(null, responseObject, responseBody);
+          request.get({ url: '/api/v1/teams/5c1568ded65e703794fc83c7', headers: {
+            'Authorization': `Bearer ${token}`
+          }}, (err, res, body) => {
               expect(err).to.be.null;
               expect(res).to.have.status(200);
               done();
-            });
+          });
         });
+      });
+
+      describe('PUT /api/v1/teams/team_id', () => {
+        const responseObject = {
+          statusCode: 200,
+          headers: {
+            'content-type': 'application/json'
+          }
+        };
+
+        const responseBody = {
+          message: 'team updated successfully'
+        };
 
         it('should update a team', (done) => {
-          chai.request(server)
-            .put(`/api/v1/teams/${teamId}`)
-            .set('Authorization', `Bearer ${token}`)
-            .send({
-              "name": "Athletic Club Bilbao",
-              "website": "http://www.athletic-club.net/",
-              "founded": "1898",
-              "country": "Spain",
-              "home_stadium": "5c1403fcc24fd5143cfe2f1d"
-            })
-            .end((err, res) => {
+          const teamDetails = {
+            "name": "Athletic Club Bilbao",
+            "website": "http://www.athletic-club.net/",
+            "founded": "1898",
+            "country": "Spain",
+            "home_stadium": "5c1403fcc24fd5143cfe2f1d"
+          };
+          this.put.yields(null, responseObject, responseBody);
+          request.put({ url: '/api/v1/teams/5c1520b39610b809c466755e', formData: teamDetails,
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }}, (err, res, body) => {
               expect(err).to.be.null;
               expect(res).to.have.status(200);
               done();
-            });
+          });
         });
+      });
+
+      describe('DELETE /api/v1/stadia/stadium_id', () => {
+        const responseObject = {
+          statusCode: 200,
+          headers: {
+            'content-type': 'application/json'
+          }
+        };
+
+        const responseBody = {
+          message: 'team deleted successfully'
+        };
 
         it('should delete a team', (done) => {
-          chai.request(server)
-            .delete(`/api/v1/teams/${teamId}`)
-            .set('Authorization', `Bearer ${token}`)
-            .end((err, res) => {
+          this.delete.yields(null, responseObject, responseBody);
+          request.delete({ url: '/api/v1/teams/5c1520b39610b809c466755e',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }}, (err, res, body) => {
               expect(err).to.be.null;
               expect(res).to.have.status(200);
               done();
-            });
+          });
         });
       });
     });

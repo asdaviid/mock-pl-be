@@ -1,12 +1,12 @@
 let chai = require('chai');
 let chaiHttp = require('chai-http');
 const expect = chai.expect;
-
+const sinon = require('sinon');
+const request = require('request');
 const fixtureController = require('../../controllers/fixture.controller');
-const Fixture = require('../../models/fixture.model');
-const User = require('../../models/user.model');
 let server = require('../../app');
 const cfg = require('../../config/app.config');
+const jwt = require('jwt-simple');
 
 chai.use(chaiHttp);
 
@@ -41,38 +41,6 @@ describe('controllers.fixture', () => {
   });
 
   describe('controllers.fixture routes', () => {
-    let token;
-
-    const userCredentials = {
-      "firstname": "mock",
-      "lastname": "mock",
-      "username": "mock",
-      "email": "mock@gmail.com",
-      "password": "password",
-      "role": "admin"
-    }
-
-    before(async () => {
-      const registerResp = await chai.request(server)
-        .post('/api/v1/auth/register')
-        .send(userCredentials);
-      
-      if (registerResp.statusCode === 201) {
-        const signinResp = await chai.request(server)
-        .post('/api/v1/auth/login')
-        .send({
-          email: 'mock@gmail.com',
-          password: 'password'
-        });
-
-        token = signinResp.body.token;
-      }
-    });
-
-    after((done) => {
-      User.deleteOne({ email: userCredentials.email }, () => { done(); });
-    });
-
     describe('access fixture routes without Authorization', () => {
       describe('GET /api/v1/fixtures', () => {
         it('should return unauthorized', (done) => {
@@ -131,92 +99,173 @@ describe('controllers.fixture', () => {
     });
 
     describe('access fixture routes with Authorization', () => {
+      let token;
+
+      beforeEach(() => {
+        var user = {
+          _id: 'wlkjgklfkjhd',
+          username: 'username',
+          password: 'password'
+        };
+
+        const payload = {
+          user
+        };
+
+        token = jwt.encode(payload, cfg.jwtSecret);
+
+        this.get = sinon.stub(request, 'get');
+        this.post = sinon.stub(request, 'post');
+        this.put = sinon.stub(request, 'put');
+        this.delete = sinon.stub(request, 'delete');
+      });
+
+      afterEach(() => {
+        request.get.restore();
+        request.post.restore();
+        request.put.restore();
+        request.delete.restore();
+      });
+
       describe('GET /api/v1/fixtures', () => {
+        const responseObject = {
+          statusCode: 200,
+          headers: {
+            'content-type': 'application/json'
+          }
+        };
+
+        const responseBody = [];
+
         it('should get all fixtures', (done) => {
-          chai.request(server)
-            .get('/api/v1/fixtures')
-            .set('Authorization', `Bearer ${token}`)
-            .end((err, res) => {
-              expect(err).to.be.null;
-              expect(res).to.have.status(200);
-              done();
-            });
+          this.get.yields(null, responseObject, responseBody);
+          const options = {
+            url: '/api/v1/fixtures',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          };
+          request.get(options, (err, res, body) => {
+            expect(err).to.be.null;
+            expect(res.statusCode).to.be.equal(200);
+            done();
+          });
         });
       });
 
       describe('POST /api/v1/fixtures', () => {
+        const responseObject = {
+          statusCode: 201,
+          headers: {
+            'content-type': 'application/json'
+          }
+        };
+
+        const responseBody = {
+          message: 'fixture added'
+        };
+
         it('should create a new fixture', (done) => {
-          chai.request(server)
-            .post('/api/v1/fixtures')
-            .set('Authorization', `Bearer ${token}`)
-            .send({
-              "home_team": "5c139966917e6f34f8501603",
-                "away_team": "5c13a08668d39235087724a2",
-                "competition": "La Liga",
-                "kickoff": "2018-12-14 16:30:00.000",
-                "venue": "5c139a216e691c0f34954df3"
-            })
-            .end((err, res) => {
+          const fixtureDetails = {
+            "home_team": "5c139966917e6f34f8501603",
+            "away_team": "5c13a08668d39235087724a2",
+            "competition": "La Liga",
+            "kickoff": "2018-12-14 16:30:00.000",
+            "venue": "5c139a216e691c0f34954df3"
+          };
+          this.post.yields(null, responseObject, responseBody);
+          request.post({ url: '/api/v1/fixtures', formData: fixtureDetails, headers: {
+            'Authorization': `Bearer ${token}`
+          }}, (err, res, body) => {
               expect(err).to.be.null;
               expect(res).to.have.status(201);
               done();
-            });
+          });
         });
       });
 
-      describe('/api/v1/fixtures/fixture_id', () => {
-        let fixtureId;
+      describe('GET /api/v1/fixtures/fixture_id', () => {
+        const responseObject = {
+          statusCode: 200,
+          headers: {
+            'content-type': 'application/json'
+          }
+        };
 
-        before(async () => {
-          const fixture = new Fixture({
-            "home_team": "5c139966917e6f34f8501603",
-              "away_team": "5c13a08668d39235087724a2",
-              "competition": "La Liga",
-              "kickoff": "2018-12-14 16:30:00.000",
-              "venue": "5c139a216e691c0f34954df3"
-          });
-          const createdFixture = await fixture.save()
-          fixtureId = createdFixture._id;
-        });
+        const responseBody = {
+          "home_team": "5c1520b39610b809c466755e",
+          "away_team": "5c1520b39610b809c466755e",
+          "competition": "La Liga",
+          "kickoff": "2018-12-14T15:30:00.000Z",
+          "venue": null
+        };
 
         it('should get a fixture', (done) => {
-          chai.request(server)
-            .get(`/api/v1/fixtures/${fixtureId}`)
-            .set('Authorization', `Bearer ${token}`)
-            .end((err, res) => {
+          this.get.yields(null, responseObject, responseBody);
+          request.get({ url: '/api/v1/fixtures/5c1520b39610b809c466755e', headers: {
+            'Authorization': `Bearer ${token}`
+          }}, (err, res, body) => {
               expect(err).to.be.null;
               expect(res).to.have.status(200);
               done();
-            });
+          });
         });
+      });
+
+      describe('PUT /api/v1/fixtures/fixture_id', () => {
+        const responseObject = {
+          statusCode: 200,
+          headers: {
+            'content-type': 'application/json'
+          }
+        };
+
+        const responseBody = {
+          message: 'fixture updated successfully'
+        };
 
         it('should update a fixture', (done) => {
-          chai.request(server)
-            .put(`/api/v1/fixtures/${fixtureId}`)
-            .set('Authorization', `Bearer ${token}`)
-            .send({
-              "home_team": "5c139966917e6f34f8501603",
-                "away_team": "5c13a08668d39235087724a2",
-                "competition": "La Liga",
-                "kickoff": "2018-12-14 16:30:00.000",
-                "venue": "5c139a216e691c0f34954df3"
-            })
-            .end((err, res) => {
+          const fixtureDetails = {
+            "home_team": "5c139966917e6f34f8501603",
+            "away_team": "5c13a08668d39235087724a2",
+            "competition": "La Liga",
+            "kickoff": "2018-12-14 16:30:00.000",
+            "venue": "5c139a216e691c0f34954df3"
+          };
+          this.put.yields(null, responseObject, responseBody);
+          request.put({ url: '/api/v1/fixtures/5c1520b39610b809c466755e', formData: fixtureDetails,
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }}, (err, res, body) => {
               expect(err).to.be.null;
               expect(res).to.have.status(200);
               done();
-            });
+          });
         });
+      });
 
-        it('should delete a fixture', (done) => {
-          chai.request(server)
-            .delete(`/api/v1/fixtures/${fixtureId}`)
-            .set('Authorization', `Bearer ${token}`)
-            .end((err, res) => {
+      describe('DELETE /api/v1/fixtures/fixture_id', () => {
+        const responseObject = {
+          statusCode: 200,
+          headers: {
+            'content-type': 'application/json'
+          }
+        };
+
+        const responseBody = {
+          message: 'fixture deleted successfully'
+        };
+
+        it('should update a fixture', (done) => {
+          this.delete.yields(null, responseObject, responseBody);
+          request.delete({ url: '/api/v1/fixtures/5c1520b39610b809c466755e',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }}, (err, res, body) => {
               expect(err).to.be.null;
               expect(res).to.have.status(200);
               done();
-            });
+          });
         });
       });
     });
