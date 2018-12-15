@@ -7,7 +7,22 @@ const search = (req, res) => {
 
   switch (collection) {
     case 'fixture':
-      // TODO: implement search functionality for fixture model
+      Fixture.find({ 
+        "$or": [
+          { 'competition': { '$regex': query, '$options': 'i' } }
+        ]
+      })
+      .populate('home_team')
+      .populate('away_team')
+      .exec((err, fixtures) => {
+        if (err) {
+          throw err;
+        }
+
+        return res.status(200).json({
+          fixtures
+        });
+      });
       break;
     case 'team':
       Team.find({ 
