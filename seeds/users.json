@@ -1,0 +1,4 @@
+[
+  {"_id":"5c138b8634156702b8d70148","firstname":"test","lastname":"user","username":"testuser","email":"test@gmail.com","password":"$2a$10$WJhLYcrVNbTMcLX3EtLdF.VnnnGH1TiiojJajyMTlx6IbGVFD2t6e","role":"admin","__v":0},
+  {"_id":"5c13c5c65ff9ea1750dcf0c2","firstname":"standard","lastname":"standard","username":"testuser","email":"standard@gmail.com","password":"$2a$10$bgtLsAzfL8FYchqKNIwZyOqIR4c1YYnFnyKy8aIzec2pPVIMs4pLG","role":"standard","createdAt":"2018-12-14T15:01:26.241Z","updatedAt":"2018-12-14T15:01:26.241Z","__v":0}
+]

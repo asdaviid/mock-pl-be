@@ -1,0 +1,4 @@
+[
+  {"_id":"5c14aee4cd1b882ed0ebe294","home_team":"5c139966917e6f34f8501603","away_team":"5c140449c24fd5143cfe2f1f","competition":"La Liga","kickoff":"2018-12-14T15:30:00.000Z","venue":"5c139a216e691c0f34954df3","createdAt":"2018-12-15T07:36:04.887Z","updatedAt":"2018-12-15T07:36:04.887Z","__v":0},
+  {"_id":"5c14aefccd1b882ed0ebe295","home_team":"5c14048bc24fd5143cfe2f20","away_team":"5c1404dcc24fd5143cfe2f21","competition":"La Liga","kickoff":"2018-12-14T15:30:00.000Z","venue":"5c139a216e691c0f34954df3","createdAt":"2018-12-15T07:36:28.739Z","updatedAt":"2018-12-15T07:36:28.739Z","__v":0}
+]
