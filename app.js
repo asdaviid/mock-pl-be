@@ -47,6 +47,10 @@ app.use('/api/v1/', stadiumRoute);
 app.use('/api/v1/', fixtureRoute);
 app.use('/api/v1/', searchRoute);
 
+app.get('/', (req, res, next) => {
+  return res.send('API for Mock Premier League');
+});
+
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   next(createError(404));
